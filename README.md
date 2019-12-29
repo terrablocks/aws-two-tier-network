@@ -1,4 +1,4 @@
-# Host a Static Website using S3 & CloudFront
+# Create a two tier AWS VPC network
 
 This terraform module will deploy the following services:
 - VPC

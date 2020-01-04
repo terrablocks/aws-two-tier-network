@@ -19,8 +19,6 @@ This terraform module will deploy the following services:
 ## Variables
 | Parameter             | Type    | Description                                                               | Default                      | Required |
 |-----------------------|---------|---------------------------------------------------------------------------|------------------------------|----------|
-| profile               | string  | AWS profile to be used for AuthN and AuthZ                                |                              | Y        |
-| region                | string  | AWS region identifier where resources needs to be created                 | us-east-1                    | N        |
 | cidr_block            | string  | CIDR block for VPC                                                        | 10.0.0.0/16                  | N        |
 | network_name          | string  | Name to be used for VPC resources                                         |                              | Y        |
 | azs                   | list    | List of availability zones to be used for launching resources             | ["us-east-1a", "us-east-1b"] | N        |

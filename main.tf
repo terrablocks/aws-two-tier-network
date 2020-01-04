@@ -1,8 +1,3 @@
-provider "aws" {
-  profile = "${var.profile}"
-  region = "${var.region}"
-}
-
 # Create VPC
 resource "aws_vpc" "vpc" {
   cidr_block = "${var.cidr_block}"

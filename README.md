@@ -27,14 +27,16 @@ This terraform module will deploy the following services:
 | flow_logs_destination | string  | Destination to store VPC flow logs. Possible values: s3, cloud-watch-logs | cloud-watch-logs             | N        |
 | private_zone          | boolean | Whether to create private hosted zone for VPC                             | false                        | N        |
 | private_zone_domain   | string  | Domain name to be used for private hosted zone                            | server.internal.com          | N        |
+| create_sgs   | boolean  | Whether to create default security groups (public, private, internal and ssh)                            | true          | N        |
 
 ## Outputs
 | Parameter            | Type   | Description                                                      |
 |----------------------|--------|------------------------------------------------------------------|
 | vpc_id               | string | ID of VPC created                                                |
-| public_subnet_id     | list   | ID of public subnet(s) created                                   |
+| vpc_cidr               | string | CIDR block of VPC created                                                |
+| public_subnet_ids     | list   | ID of public subnet(s) created                                   |
 | public_subnet_cidrs  | list   | CIDR block of public subnet(s) created                           |
-| private_subnet_id    | list   | ID of private subnet(s) created                                  |
+| private_subnet_ids    | list   | ID of private subnet(s) created                                  |
 | private_subnet_cidrs | list   | CIDR block of private subnet(s) created                          |
 | nat_public_ip        | string | Elastic IP of NAT gateway                                        |
 | internal_sg          | string | Security group ID for internal communication                     |

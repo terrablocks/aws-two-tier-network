@@ -31,3 +31,7 @@ variable "private_zone" {
 variable "private_zone_domain" {
   default = "server.internal.com"
 }
+
+variable "create_sgs" {
+  default = true
+}

@@ -2,6 +2,10 @@ output "vpc_id" {
   value = aws_vpc.vpc.id
 }
 
+output "vpc_cidr" {
+  value = aws_vpc.vpc.cidr_block
+}
+
 output "public_subnet_id" {
   value = aws_subnet.pub_sub.*.id
 }
@@ -23,23 +27,23 @@ output "nat_public_ip" {
 }
 
 output "internal_sg" {
-  value = aws_security_group.int_sg.id
+  value = join(", ", aws_security_group.int_sg.*.id)
 }
 
 output "ssh_only_sg" {
-  value = aws_security_group.ssh_sg.id
+  value = join(", ", aws_security_group.ssh_sg.*.id)
 }
 
 output "public_web_dmz_sg" {
-  value = aws_security_group.pub_sg.id
+  value = join(", ", aws_security_group.pub_sg.*.id)
 }
 
 output "private_web_dmz_sg" {
-  value = aws_security_group.pvt_sg.id
+  value = join(", ", aws_security_group.pvt_sg.*.id)
 }
 
 output "private_zone_id" {
-  value = aws_route53_zone.private.*.zone_id
+  value = join(", ", aws_route53_zone.private.*.zone_id)
 }
 
 output "private_zone_ns" {

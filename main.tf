@@ -74,13 +74,15 @@ resource "aws_route_table_association" "pub_rtb_assoc" {
 
 # Create EIP for NAT gateway
 resource "aws_eip" "nat_eip" {
-  vpc = true
+  count = var.create_nat ? 1 : 0
+  vpc   = true
 }
 
 # Create NAT gateway for private subnet
 resource "aws_nat_gateway" "nat_gw" {
+  count         = var.create_nat ? 1 : 0
   subnet_id     = aws_subnet.pub_sub[0].id
-  allocation_id = aws_eip.nat_eip.id
+  allocation_id = join(", ", aws_eip.nat_eip.*.id)
 
   tags = {
     Name = "${var.network_name}-nat-gw"
@@ -89,18 +91,24 @@ resource "aws_nat_gateway" "nat_gw" {
 
 # Create private route table
 resource "aws_route_table" "pvt_rtb" {
+  count  = var.create_nat ? 0 : 1
+  vpc_id = aws_vpc.vpc.id
+}
+
+resource "aws_route_table" "pvt_nat_rtb" {
+  count  = var.create_nat ? 1 : 0
   vpc_id = aws_vpc.vpc.id
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat_gw.id
+    nat_gateway_id = join(", ", aws_nat_gateway.nat_gw.*.id)
   }
 }
 
 resource "aws_route_table_association" "pvt_rtb_assoc" {
   count          = length(var.azs)
   subnet_id      = aws_subnet.pvt_sub[count.index].id
-  route_table_id = aws_route_table.pvt_rtb.id
+  route_table_id = var.create_nat ? join(", ", aws_route_table.pvt_nat_rtb.*.id) : join(", ", aws_route_table.pvt_rtb.*.id)
 }
 
 # Create public NACL
@@ -126,15 +134,7 @@ resource "aws_network_acl" "pub_nacl" {
     to_port    = 443
   }
 
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 300
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 22
-    to_port    = 22
-  }
-
+  # Ephemeral port range
   ingress {
     protocol   = "tcp"
     rule_no    = 999
@@ -162,15 +162,7 @@ resource "aws_network_acl" "pub_nacl" {
     to_port    = 443
   }
 
-  egress {
-    protocol   = "tcp"
-    rule_no    = 300
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 22
-    to_port    = 22
-  }
-
+  # Ephemeral port range
   egress {
     protocol   = "tcp"
     rule_no    = 999
@@ -297,21 +289,21 @@ resource "aws_security_group" "pvt_sg" {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    security_groups = [aws_security_group.pub_sg.id]
+    security_groups = aws_security_group.pub_sg.*.id
   }
 
   ingress {
     from_port       = 80
     to_port         = 80
     protocol        = "tcp"
-    security_groups = [aws_security_group.pub_sg.id]
+    security_groups = aws_security_group.pub_sg.*.id
   }
 
   ingress {
     from_port       = 443
     to_port         = 443
     protocol        = "tcp"
-    security_groups = [aws_security_group.pub_sg.id]
+    security_groups = aws_security_group.pub_sg.*.id
   }
 
   egress {
@@ -324,6 +316,7 @@ resource "aws_security_group" "pvt_sg" {
 
 # Create VPC flow logs
 resource "aws_flow_log" "flow_logs" {
+  count                = var.create_flow_logs ? 1 : 0
   iam_role_arn         = var.flow_logs_destination == "cloud-watch-logs" ? aws_iam_role.flow_logs_role[0].arn : ""
   log_destination      = var.flow_logs_destination == "cloud-watch-logs" ? aws_cloudwatch_log_group.cw_log_group[0].arn : aws_s3_bucket.flow_logs_bucket[0].arn
   log_destination_type = var.flow_logs_destination
@@ -333,13 +326,13 @@ resource "aws_flow_log" "flow_logs" {
 
 # Create cloudwatch log group for vpc flow logs
 resource "aws_cloudwatch_log_group" "cw_log_group" {
-  count = var.flow_logs_destination == "cloud-watch-logs" ? 1 : 0
+  count = var.create_flow_logs && var.flow_logs_destination == "cloud-watch-logs" ? 1 : 0
   name  = "${var.network_name}-flow-logs-group"
 }
 
 # Create IAM role for VPC flow logs
 resource "aws_iam_role" "flow_logs_role" {
-  count = var.flow_logs_destination == "cloud-watch-logs" ? 1 : 0
+  count = var.create_flow_logs && var.flow_logs_destination == "cloud-watch-logs" ? 1 : 0
   name  = "${var.network_name}-flow-logs-role"
 
   assume_role_policy = <<EOF
@@ -357,12 +350,11 @@ resource "aws_iam_role" "flow_logs_role" {
   ]
 }
 EOF
-
 }
 
 # Create IAM policy for VPC flow logs role
 resource "aws_iam_role_policy" "flow_logs_policy" {
-  count = var.flow_logs_destination == "cloud-watch-logs" ? 1 : 0
+  count = var.create_flow_logs && var.flow_logs_destination == "cloud-watch-logs" ? 1 : 0
   name  = "${var.network_name}-flow-logs-policy"
   role  = aws_iam_role.flow_logs_role[0].id
 
@@ -384,7 +376,6 @@ resource "aws_iam_role_policy" "flow_logs_policy" {
   ]
 }
 EOF
-
 }
 
 resource "random_id" "id" {
@@ -393,17 +384,16 @@ resource "random_id" "id" {
 
 # Create S3 bucket for flow logs storage
 resource "aws_s3_bucket" "flow_logs_bucket" {
-  count  = var.flow_logs_destination == "cloud-watch-logs" ? 0 : 1
+  count  = var.create_flow_logs && var.flow_logs_destination == "s3" ? 1 : 0
   bucket = "${var.network_name}-flow-logs-${random_id.id.hex}"
 }
 
 # Create private hosted zone
 resource "aws_route53_zone" "private" {
-  count = var.private_zone == true ? 1 : 0
+  count = var.create_private_zone == true ? 1 : 0
   name  = var.private_zone_domain
 
   vpc {
     vpc_id = aws_vpc.vpc.id
   }
 }
-

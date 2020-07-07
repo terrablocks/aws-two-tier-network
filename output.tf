@@ -6,7 +6,7 @@ output "vpc_cidr" {
   value = aws_vpc.vpc.cidr_block
 }
 
-output "public_subnet_id" {
+output "public_subnet_ids" {
   value = aws_subnet.pub_sub.*.id
 }
 
@@ -14,7 +14,7 @@ output "public_subnet_cidrs" {
   value = aws_subnet.pub_sub.*.cidr_block
 }
 
-output "private_subnet_id" {
+output "private_subnet_ids" {
   value = aws_subnet.pvt_sub.*.id
 }
 

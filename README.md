@@ -20,6 +20,18 @@ This terraform module will deploy the following services:
 
 MIT Licence. See [Licence](LICENCE) for full details.
 
+## Example:
+```terraform
+module "vpc" {
+  source = "github.com/terrablocks/aws-two-tier-network.git"
+
+  network_name     = "pvt-network"
+  azs              = ["us-east-1a", "us-east-1b", "us-east-1c"]
+  pub_subnet_mask  = 24
+  pvt_subnet_mask  = 22
+  data_subnet_mask = 24
+}
+```
 # Usage Instructions:
 ## Variables
 | Parameter             | Type    | Description                                                               | Default                      | Required |

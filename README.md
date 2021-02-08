@@ -20,6 +20,7 @@ This terraform module will deploy the following services:
 
 MIT Licence. See [Licence](LICENCE) for full details.
 
+# Usage Instructions:
 ## Example:
 ```terraform
 module "vpc" {
@@ -32,7 +33,6 @@ module "vpc" {
   data_subnet_mask = 24
 }
 ```
-# Usage Instructions:
 ## Variables
 | Parameter             | Type    | Description                                                               | Default                      | Required |
 |-----------------------|---------|---------------------------------------------------------------------------|------------------------------|----------|

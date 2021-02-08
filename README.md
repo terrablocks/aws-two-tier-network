@@ -30,7 +30,6 @@ module "vpc" {
   azs              = ["us-east-1a", "us-east-1b", "us-east-1c"]
   pub_subnet_mask  = 24
   pvt_subnet_mask  = 22
-  data_subnet_mask = 24
 }
 ```
 ## Variables

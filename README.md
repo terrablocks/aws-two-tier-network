@@ -46,6 +46,7 @@ module "vpc" {
 | create_private_zone          | boolean | Whether to create private hosted zone for VPC                             | false                        | N        |
 | private_zone_domain   | string  | Domain name to be used for private hosted zone                            | server.internal.com          | N        |
 | create_sgs   | boolean  | Whether to create default security groups (public, private, internal and ssh)                            | true          | N        |
+| tags   | map  | Map of key-value pair to associate with resources             | true          | N        |
 
 ## Outputs
 | Parameter            | Type   | Description                                                      |

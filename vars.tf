@@ -43,3 +43,8 @@ variable "private_zone_domain" {
 variable "create_sgs" {
   default = true
 }
+
+variable "tags" {
+  type = map
+  default = {}
+}

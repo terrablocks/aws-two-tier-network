@@ -3,9 +3,9 @@ resource "aws_vpc" "vpc" {
   cidr_block           = var.cidr_block
   enable_dns_hostnames = true
 
-  tags = {
+  tags = merge({
     Name = var.network_name
-  }
+  }, var.tags)
 }
 
 locals {
@@ -24,10 +24,10 @@ resource "aws_subnet" "pub_sub" {
   )
   availability_zone = element(var.azs, count.index)
 
-  tags = {
+  tags = merge({
     Name = "${var.network_name}-pub-sub-${element(var.azs, count.index)}"
     Tier = "public"
-  }
+  }, var.tags)
 }
 
 # Create private subnet
@@ -41,19 +41,19 @@ resource "aws_subnet" "pvt_sub" {
   )
   availability_zone = element(var.azs, count.index)
 
-  tags = {
+  tags = merge({
     Name = "${var.network_name}-pvt-sub-${element(var.azs, count.index)}"
     Tier = "private"
-  }
+  }, var.tags)
 }
 
 # Create internet gateway
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.vpc.id
 
-  tags = {
+  tags = merge({
     Name = "${var.network_name}-igw"
-  }
+  }, var.tags)
 }
 
 # Create public route table
@@ -64,6 +64,10 @@ resource "aws_route_table" "pub_rtb" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.igw.id
   }
+
+  tags = merge({
+    Name = "${var.network_name}-pub-rtb"
+  }, var.tags)
 }
 
 resource "aws_route_table_association" "pub_rtb_assoc" {
@@ -76,6 +80,10 @@ resource "aws_route_table_association" "pub_rtb_assoc" {
 resource "aws_eip" "nat_eip" {
   count = var.create_nat ? 1 : 0
   vpc   = true
+
+  tags = merge({
+    Name = "${var.network_name}-eip"
+  }, var.tags)
 }
 
 # Create NAT gateway for private subnet
@@ -84,15 +92,19 @@ resource "aws_nat_gateway" "nat_gw" {
   subnet_id     = aws_subnet.pub_sub[0].id
   allocation_id = join(", ", aws_eip.nat_eip.*.id)
 
-  tags = {
+  tags = merge({
     Name = "${var.network_name}-nat-gw"
-  }
+  }, var.tags)
 }
 
 # Create private route table
 resource "aws_route_table" "pvt_rtb" {
   count  = var.create_nat ? 0 : 1
   vpc_id = aws_vpc.vpc.id
+
+  tags = merge({
+    Name = "${var.network_name}-pvt-rtb"
+  }, var.tags)
 }
 
 resource "aws_route_table" "pvt_nat_rtb" {
@@ -103,6 +115,10 @@ resource "aws_route_table" "pvt_nat_rtb" {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = join(", ", aws_nat_gateway.nat_gw.*.id)
   }
+
+  tags = merge({
+    Name = "${var.network_name}-pvt-nat-rtb"
+  }, var.tags)
 }
 
 resource "aws_route_table_association" "pvt_rtb_assoc" {
@@ -172,9 +188,9 @@ resource "aws_network_acl" "pub_nacl" {
     to_port    = 65535
   }
 
-  tags = {
+  tags = merge({
     Name = "${var.network_name}-pub-nacl"
-  }
+  }, var.tags)
 }
 
 # Create private NACL
@@ -200,9 +216,9 @@ resource "aws_network_acl" "pvt_nacl" {
     to_port    = 0
   }
 
-  tags = {
+  tags = merge({
     Name = "${var.network_name}-pvt-nacl"
-  }
+  }, var.tags)
 }
 
 # Create security group for internal communication
@@ -225,6 +241,10 @@ resource "aws_security_group" "int_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = merge({
+    Name = "${var.network_name}-internal-sg"
+  }, var.tags)
 }
 
 # Create security group for accepting only SSH connection
@@ -247,6 +267,10 @@ resource "aws_security_group" "ssh_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = merge({
+    Name = "${var.network_name}-ssh-sg"
+  }, var.tags)
 }
 
 # Create security group for public facing web servers or load balancer
@@ -276,6 +300,10 @@ resource "aws_security_group" "pub_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = merge({
+    Name = "${var.network_name}-pub-web-sg"
+  }, var.tags)
 }
 
 # Create security group for internal web/app servers
@@ -312,6 +340,10 @@ resource "aws_security_group" "pvt_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = merge({
+    Name = "${var.network_name}-pvt-web-sg"
+  }, var.tags)
 }
 
 # Create VPC flow logs
@@ -322,12 +354,20 @@ resource "aws_flow_log" "flow_logs" {
   log_destination_type = var.flow_logs_destination
   traffic_type         = "ALL"
   vpc_id               = aws_vpc.vpc.id
+
+  tags = merge({
+    Name = "${var.network_name}-flow-logs"
+  }, var.tags)
 }
 
 # Create cloudwatch log group for vpc flow logs
 resource "aws_cloudwatch_log_group" "cw_log_group" {
   count = var.create_flow_logs && var.flow_logs_destination == "cloud-watch-logs" ? 1 : 0
   name  = "${var.network_name}-flow-logs-group"
+
+  tags = merge({
+    Name = "${var.network_name}-flow-logs-group"
+  }, var.tags)
 }
 
 # Create IAM role for VPC flow logs
@@ -350,6 +390,10 @@ resource "aws_iam_role" "flow_logs_role" {
   ]
 }
 EOF
+
+  tags = merge({
+    Name = "${var.network_name}-flow-logs-role"
+  }, var.tags)
 }
 
 # Create IAM policy for VPC flow logs role
@@ -386,6 +430,10 @@ resource "random_id" "id" {
 resource "aws_s3_bucket" "flow_logs_bucket" {
   count  = var.create_flow_logs && var.flow_logs_destination == "s3" ? 1 : 0
   bucket = "${var.network_name}-flow-logs-${random_id.id.hex}"
+
+  tags = merge({
+    Name = "${var.network_name}-flow-logs-${random_id.id.hex}"
+  }, var.tags)
 }
 
 # Create private hosted zone
@@ -396,4 +444,8 @@ resource "aws_route53_zone" "private" {
   vpc {
     vpc_id = aws_vpc.vpc.id
   }
+
+  tags = merge({
+    Name = "${var.network_name}-pvt-zone"
+  }, var.tags)
 }

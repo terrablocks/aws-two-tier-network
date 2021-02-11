@@ -48,3 +48,7 @@ variable "tags" {
   type = map
   default = {}
 }
+
+variable "add_eks_tags" {
+  default = false
+}

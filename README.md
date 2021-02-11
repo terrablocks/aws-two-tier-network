@@ -46,7 +46,9 @@ module "vpc" {
 | create_private_zone          | boolean | Whether to create private hosted zone for VPC                             | false                        | N        |
 | private_zone_domain   | string  | Domain name to be used for private hosted zone                            | server.internal.com          | N        |
 | create_sgs   | boolean  | Whether to create default security groups (public, private, internal and ssh)                            | true          | N        |
-| tags   | map  | Map of key-value pair to associate with resources             | true          | N        |
+| tags   | map  | Map of key-value pair to associate with resources             |          | N        |
+| add_eks_tags   | boolean  | Add `kubernetes.io/role/elb: 1` and `kubernetes.io/role/internal-elb: 1` tags to respective subnets for load balancer            | false          | N        |
+
 
 ## Outputs
 | Parameter            | Type   | Description                                                      |

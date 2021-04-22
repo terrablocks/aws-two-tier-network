@@ -57,8 +57,10 @@ module "vpc" {
 | cidr               | string | CIDR block of VPC created                                                |
 | public_subnet_ids     | list   | ID of public subnet(s) created                                   |
 | public_subnet_cidrs  | list   | CIDR block of public subnet(s) created                           |
+| public_subnet_rtb     | string   | ID of public route table created                                   |
 | private_subnet_ids    | list   | ID of private subnet(s) created                                  |
 | private_subnet_cidrs | list   | CIDR block of private subnet(s) created                          |
+| private_subnet_rtb     | string   | ID of private route table created                                   |
 | nat_public_ip        | string | Elastic IP of NAT gateway                                        |
 | internal_sg          | string | Security group ID for internal communication                     |
 | ssh_only_sg          | string | Security group ID for accepting only SSH connection              |

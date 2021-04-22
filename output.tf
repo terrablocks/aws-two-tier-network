@@ -14,12 +14,20 @@ output "public_subnet_cidrs" {
   value = aws_subnet.pub_sub.*.cidr_block
 }
 
+output "public_subnet_rtb" {
+  value = aws_route_table.pub_rtb.id
+}
+
 output "private_subnet_ids" {
   value = aws_subnet.pvt_sub.*.id
 }
 
 output "private_subnet_cidrs" {
   value = aws_subnet.pvt_sub.*.cidr_block
+}
+
+output "private_subnet_rtb" {
+  value = var.create_pvt_nat ? aws_route_table.pvt_nat_rtb.id : aws_route_table.pvt_rtb.id
 }
 
 output "nat_public_ip" {

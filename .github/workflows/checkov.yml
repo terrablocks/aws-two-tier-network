@@ -1,4 +1,4 @@
-name: Checkov
+name: checkov
 on:
   push:
     branches:

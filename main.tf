@@ -14,6 +14,7 @@ locals {
 
 # Create public subnet
 resource "aws_subnet" "pub_sub" {
+  #checkov:skip=CKV_AWS_130:Resources in public subnet should have public ip automatically
   count                   = length(var.azs)
   vpc_id                  = aws_vpc.vpc.id
   map_public_ip_on_launch = true

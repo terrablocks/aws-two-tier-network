@@ -221,12 +221,12 @@ resource "aws_network_acl" "pvt_nacl" {
   }, var.tags)
 }
 
-# Create security group for internal communication
-resource "aws_security_group" "int_sg" {
+# Create private security group
+resource "aws_security_group" "pvt_sg" {
   count       = var.create_sgs ? 1 : 0
   vpc_id      = aws_vpc.vpc.id
-  name        = "${var.network_name}-internal-sg"
-  description = "Security group allowing communication internally within the VPC"
+  name        = "${var.network_name}-private-sg"
+  description = "Security group allowing communication within the VPC for ingress"
 
   ingress {
     from_port   = 0
@@ -243,33 +243,33 @@ resource "aws_security_group" "int_sg" {
   }
 
   tags = merge({
-    Name = "${var.network_name}-internal-sg"
+    Name = "${var.network_name}-private-sg"
   }, var.tags)
 }
 
-# Create security group for accepting only SSH connection
-resource "aws_security_group" "ssh_sg" {
+# Create protected security group for all communications strictly within the VPC
+resource "aws_security_group" "protected_sg" {
   count       = var.create_sgs ? 1 : 0
   vpc_id      = aws_vpc.vpc.id
-  name        = "${var.network_name}-ssh-sg"
-  description = "Security group allowing only SSH connections"
+  name        = "${var.network_name}-protected-sg"
+  description = "Security group allowing all communications strictly within the VPC"
 
   ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [var.cidr_block]
   }
 
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [var.cidr_block]
   }
 
   tags = merge({
-    Name = "${var.network_name}-ssh-sg"
+    Name = "${var.network_name}-protected-sg"
   }, var.tags)
 }
 
@@ -307,18 +307,11 @@ resource "aws_security_group" "pub_sg" {
 }
 
 # Create security group for internal web/app servers
-resource "aws_security_group" "pvt_sg" {
+resource "aws_security_group" "pvt_web_sg" {
   count       = var.create_sgs ? 1 : 0
   vpc_id      = aws_vpc.vpc.id
   name        = "${var.network_name}-pvt-web-sg"
-  description = "Security group allowing 22, 80 and 443 internally for instances"
-
-  ingress {
-    from_port       = 22
-    to_port         = 22
-    protocol        = "tcp"
-    security_groups = aws_security_group.pub_sg.*.id
-  }
+  description = "Security group allowing 80 and 443 internally for app servers"
 
   ingress {
     from_port       = 80
@@ -362,8 +355,9 @@ resource "aws_flow_log" "flow_logs" {
 
 # Create cloudwatch log group for vpc flow logs
 resource "aws_cloudwatch_log_group" "cw_log_group" {
-  count = var.create_flow_logs && var.flow_logs_destination == "cloud-watch-logs" ? 1 : 0
-  name  = "${var.network_name}-flow-logs-group"
+  count             = var.create_flow_logs && var.flow_logs_destination == "cloud-watch-logs" ? 1 : 0
+  name              = "${var.network_name}-flow-logs-group"
+  retention_in_days = var.flow_logs_retention
 
   tags = merge({
     Name = "${var.network_name}-flow-logs-group"
@@ -426,14 +420,67 @@ resource "random_id" "id" {
   byte_length = 8
 }
 
+data "aws_kms_key" "s3" {
+  key_id = var.s3_kms_key
+}
+
 # Create S3 bucket for flow logs storage
 resource "aws_s3_bucket" "flow_logs_bucket" {
-  count  = var.create_flow_logs && var.flow_logs_destination == "s3" ? 1 : 0
-  bucket = "${var.network_name}-flow-logs-${random_id.id.hex}"
+  #checkov:skip=CKV_AWS_19:Default SSE is in place
+  #checkov:skip=CKV_AWS_18:Access logging not required
+  #checkov:skip=CKV_AWS_144:CRR not required
+  #checkov:skip=CKV_AWS_145:Default SSE is in place
+  #checkov:skip=CKV_AWS_52:MFA delete not required
+  #checkov:skip=CKV_AWS_21:Versioning not required
+  count         = var.create_flow_logs && var.flow_logs_destination == "s3" ? 1 : 0
+  bucket        = "${var.network_name}-flow-logs-${random_id.id.hex}"
+  acl           = "private"
+  force_destroy = var.s3_force_destroy
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm     = var.s3_kms_key == "alias/aws/s3" ? "AES256" : "aws:kms"
+        kms_master_key_id = var.s3_kms_key == "alias/aws/s3" ? null : data.aws_kms_key.s3.id
+      }
+    }
+  }
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowSSLRequestsOnly",
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::${var.network_name}-flow-logs-${random_id.id.hex}",
+        "arn:aws:s3:::${var.network_name}-flow-logs-${random_id.id.hex}/*"
+      ],
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        }
+      }
+    }
+  ]
+}
+POLICY
 
   tags = merge({
     Name = "${var.network_name}-flow-logs-${random_id.id.hex}"
   }, var.tags)
+}
+
+resource "aws_s3_bucket_public_access_block" "flow_logs_bucket" {
+  count                   = var.create_flow_logs && var.flow_logs_destination == "s3" ? 1 : 0
+  bucket                  = join(",", aws_s3_bucket.flow_logs_bucket.*.id)
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 # Create private hosted zone

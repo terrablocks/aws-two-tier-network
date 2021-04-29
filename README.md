@@ -1,5 +1,7 @@
 # Create a two tier AWS VPC network
 
+![checkov](https://img.shields.io/github/workflow/status/terrablocks/aws-two-tier-network/checkov/master) ![checkov](https://github.com/terrablocks/aws-two-tier-network/actions/workflows/checkov/badge.svg)
+
 This terraform module will deploy the following services:
 - VPC
   - Subnets
@@ -15,13 +17,13 @@ This terraform module will deploy the following services:
   - Log Group
 - S3
 
-## Licence:
+## Licence
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 MIT Licence. See [Licence](LICENCE) for full details.
 
-# Usage Instructions:
-## Example:
+# Usage Instructions
+## Example
 ```terraform
 module "vpc" {
   source = "github.com/terrablocks/aws-two-tier-network.git"
@@ -32,45 +34,52 @@ module "vpc" {
   pvt_subnet_mask  = 22
 }
 ```
-## Variables
-| Parameter             | Type    | Description                                                               | Default                      | Required |
-|-----------------------|---------|---------------------------------------------------------------------------|------------------------------|----------|
-| cidr_block            | string  | CIDR block for VPC                                                        | 10.0.0.0/16                  | N        |
-| network_name          | string  | Name to be used for VPC resources                                         |                              | Y        |
-| azs                   | list    | List of availability zones to be used for launching resources             | ["us-east-1a", "us-east-1b"] | N        |
-| pub_subnet_mask       | string  | Subnet mask to use for public subnet                                      | 24                           | N        |
-| pvt_subnet_mask       | string  | Subnet mask to use for private subnet                                     | 24                           | N        |
-| create_nat            | boolean | Whether to create NAT gateway for private subnet                                     | true                           | N        |
-| create_flow_logs      | boolean | Whether to enable flow logs for VPC                                     | true                           | N        |
-| flow_logs_destination | string  | Destination to store VPC flow logs. Possible values: s3, cloud-watch-logs | cloud-watch-logs             | N        |
-| create_private_zone          | boolean | Whether to create private hosted zone for VPC                             | false                        | N        |
-| private_zone_domain   | string  | Domain name to be used for private hosted zone                            | server.internal.com          | N        |
-| create_sgs   | boolean  | Whether to create default security groups (public, private, internal and ssh)                            | true          | N        |
-| tags   | map  | Map of key-value pair to associate with resources             |          | N        |
-| add_eks_tags   | boolean  | Add `kubernetes.io/role/elb: 1` and `kubernetes.io/role/internal-elb: 1` tags to respective subnets for load balancer            | false          | N        |
 
+## Requirements
+
+| Name | Version |
+|------|---------|
+| terraform | >= 0.13 |
+| aws | 3.37.0 |
+| random | 3.1.0 |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| cidr_block | CIDR block for VPC | `string` | `"10.0.0.0/16"` | no |
+| network_name | Name to be used for VPC resources | `string` | n/a | yes |
+| azs | List of availability zones to be used for launching resources | `list(string)` | <pre>[<br>  "us-east-1a",<br>  "us-east-1b"<br>]</pre> | no |
+| pub_subnet_mask | Subnet mask to use for public subnet | `number` | `24` | no |
+| pvt_subnet_mask | Subnet mask to use for private subnet | `number` | `24` | no |
+| create_nat | Whether to create NAT gateway for private subnet | `bool` | `true` | no |
+| create_flow_logs | Whether to enable flow logs for VPC | `bool` | `true` | no |
+| flow_logs_destination | Destination to store VPC flow logs. Possible values: s3, cloud-watch-logs | `string` | `"cloud-watch-logs"` | no |
+| flow_logs_retention | Time period for which you want to retain VPC flow logs in CloudWatch log group. Default is 0 which means logs never expire. Possible values are 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 | `number` | `0` | no |
+| s3_force_destroy | Delete bucket content before deleting bucket | `bool` | `true` | no |
+| s3_kms_key | Alias/ID/ARN of KMS key to use for encrypting S3 bucket content | `string` | `"alias/aws/s3"` | no |
+| create_private_zone | Whether to create private hosted zone for VPC | `bool` | `false` | no |
+| private_zone_domain | Domain name to be used for private hosted zone | `string` | `"server.internal.com"` | no |
+| create_sgs | Whether to create few additional security groups which are mostly required for controlling traffic | `bool` | `true` | no |
+| tags | Map of key-value pair to associate with resources | `map(any)` | `{}` | no |
+| add_eks_tags | Add `kubernetes.io/role/elb: 1` and `kubernetes.io/role/internal-elb: 1` tags to respective subnets for load balancer | `bool` | `false` | no |
 
 ## Outputs
-| Parameter            | Type   | Description                                                      |
-|----------------------|--------|------------------------------------------------------------------|
-| id               | string | ID of VPC created                                                |
-| cidr               | string | CIDR block of VPC created                                                |
-| public_subnet_ids     | list   | ID of public subnet(s) created                                   |
-| public_subnet_cidrs  | list   | CIDR block of public subnet(s) created                           |
-| public_subnet_rtb     | string   | ID of public route table created                                   |
-| private_subnet_ids    | list   | ID of private subnet(s) created                                  |
-| private_subnet_cidrs | list   | CIDR block of private subnet(s) created                          |
-| private_subnet_rtb     | string   | ID of private route table created                                   |
-| nat_public_ip        | string | Elastic IP of NAT gateway                                        |
-| internal_sg          | string | Security group ID for internal communication                     |
-| ssh_only_sg          | string | Security group ID for accepting only SSH connection              |
-| public_web_dmz_sg    | string | Security group ID for public facing web servers or load balancer |
-| private_web_dmz_sg   | string | Security group ID for internal web/app servers                   |
-| private_zone_id      | string | Route53 private hosted zone id                                   |
-| private_zone_ns      | list   | List of private hosted zone name servers                         |
 
-## Deployment
-- `terraform init` - download plugins required to deploy resources
-- `terraform plan` - get detailed view of resources that will be created, deleted or replaced
-- `terraform apply -auto-approve` - deploy the template without confirmation (non-interactive mode)
-- `terraform destroy -auto-approve` - terminate all the resources created using this template without confirmation (non-interactive mode)
+| Name | Description |
+|------|-------------|
+| id | ID of VPC created |
+| cidr | CIDR block of VPC created |
+| public_subnet_ids | List of public subnets id |
+| public_subnet_cidrs | List of public subnet CIDR block |
+| public_subnet_rtb | ID of public route table created |
+| private_subnet_ids | List of private subnet id |
+| private_subnet_cidrs | List of private subnet CIDR block |
+| private_subnet_rtb | ID of private route table created |
+| nat_public_ip | Elastic IP of NAT gateway |
+| pvt_sg | ID of private security group |
+| protected_sg | ID of security group allowing all communications strictly within the VPC |
+| public_web_dmz_sg | Security group ID for public facing web servers or load balancer |
+| private_web_dmz_sg | Security group ID for internal web/app servers |
+| private_zone_id | Route53 private hosted zone id |
+| private_zone_ns | List of private hosted zone name servers |

@@ -1,6 +1,6 @@
 # Create a two tier AWS VPC network
 
-![checkov](https://img.shields.io/github/workflow/status/terrablocks/aws-two-tier-network/checkov/master) ![checkov](https://github.com/terrablocks/aws-two-tier-network/actions/workflows/checkov/badge.svg)
+![License](https://img.shields.io/github/license/terrablocks/aws-two-tier-network?style=for-the-badge) ![Checkov](https://img.shields.io/github/workflow/status/terrablocks/aws-two-tier-network/checkov/master?label=checkov&style=for-the-badge) ![Commit](https://img.shields.io/github/last-commit/terrablocks/aws-two-tier-network?style=for-the-badge)
 
 This terraform module will deploy the following services:
 - VPC

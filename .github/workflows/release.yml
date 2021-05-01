@@ -1,14 +1,24 @@
 name: release
 on:
-  workflow_run:
-    workflows: ["checkov"]
-    types:
-      - completed
+  push:
+    tags:
+      - v*
 jobs:
   release:
-    name: release
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Test with Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          skip_check: CKV_AWS_130
+          framework: terraform
       - uses: "marvinpinto/action-automatic-releases@v1.1.2"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"

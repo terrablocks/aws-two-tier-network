@@ -1,15 +1,13 @@
 name: release
-
 on:
-  push:
-    tags:
-      - v*
-
+  workflow_run:
+    workflows: ["checkov"]
+    types:
+      - completed
 jobs:
   release:
     name: release
     runs-on: ubuntu-latest
-
     steps:
       - uses: "marvinpinto/action-automatic-releases@v1.1.2"
         with:

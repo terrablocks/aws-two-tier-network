@@ -2,17 +2,16 @@ name: release
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      - v*
 
 jobs:
-  publish:
+  release:
+    name: release
     runs-on: ubuntu-latest
+
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: "marvinpinto/action-automatic-releases@v1.1.2"
         with:
-          publish: true
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
-          config-name: release.yml
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -6,7 +6,6 @@ on:
       - completed
 jobs:
   release:
-    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
     name: release
     runs-on: ubuntu-latest
     steps:

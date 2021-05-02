@@ -54,6 +54,18 @@ variable "flow_logs_retention" {
   description = "Time period for which you want to retain VPC flow logs in CloudWatch log group. Default is 0 which means logs never expire. Possible values are 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653"
 }
 
+variable "flow_logs_cw_log_group_arn" {
+  type        = string
+  default     = ""
+  description = "ARN of CloudWatch Log Group to use for storing VPC flow logs"
+}
+
+variable "flow_logs_bucket_arn" {
+  type        = string
+  default     = ""
+  description = "ARN of S3 to use for storing VPC flow logs"
+}
+
 variable "s3_force_destroy" {
   type        = bool
   default     = true

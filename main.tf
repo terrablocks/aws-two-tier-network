@@ -14,7 +14,7 @@ locals {
 
 # Create public subnet
 resource "aws_subnet" "pub_sub" {
-  #checkov:skip=CKV_AWS_130:Public IP required in public subnet
+  # checkov:skip=CKV_AWS_130: Public IP required in public subnet
   count                   = length(var.azs)
   vpc_id                  = aws_vpc.vpc.id
   map_public_ip_on_launch = true
@@ -356,7 +356,7 @@ resource "aws_flow_log" "flow_logs" {
 
 # Create cloudwatch log group for vpc flow logs
 resource "aws_cloudwatch_log_group" "cw_log_group" {
-  count             = var.create_flow_logs && var.flow_logs_destination == "cloud-watch-logs" ? 1 : 0
+  count             = var.create_flow_logs && var.flow_logs_destination == "cloud-watch-logs" && var.flow_logs_cw_log_group_arn == "" ? 1 : 0
   name              = "${var.network_name}-flow-logs-group"
   retention_in_days = var.flow_logs_retention
 
@@ -367,7 +367,7 @@ resource "aws_cloudwatch_log_group" "cw_log_group" {
 
 # Create IAM role for VPC flow logs
 resource "aws_iam_role" "flow_logs_role" {
-  count = var.create_flow_logs && var.flow_logs_destination == "cloud-watch-logs" ? 1 : 0
+  count = var.create_flow_logs && var.flow_logs_destination == "cloud-watch-logs" && var.flow_logs_cw_log_group_arn == "" ? 1 : 0
   name  = "${var.network_name}-flow-logs-role"
 
   assume_role_policy = <<EOF
@@ -393,7 +393,7 @@ EOF
 
 # Create IAM policy for VPC flow logs role
 resource "aws_iam_role_policy" "flow_logs_policy" {
-  count = var.create_flow_logs && var.flow_logs_destination == "cloud-watch-logs" ? 1 : 0
+  count = var.create_flow_logs && var.flow_logs_destination == "cloud-watch-logs" && var.flow_logs_cw_log_group_arn == "" ? 1 : 0
   name  = "${var.network_name}-flow-logs-policy"
   role  = aws_iam_role.flow_logs_role[0].id
 
@@ -427,13 +427,13 @@ data "aws_kms_key" "s3" {
 
 # Create S3 bucket for flow logs storage
 resource "aws_s3_bucket" "flow_logs_bucket" {
-  #checkov:skip=CKV_AWS_19:Default SSE is in place
-  #checkov:skip=CKV_AWS_18:Access logging not required
-  #checkov:skip=CKV_AWS_144:CRR not required
-  #checkov:skip=CKV_AWS_145:Default SSE is in place
-  #checkov:skip=CKV_AWS_52:MFA delete not required
-  #checkov:skip=CKV_AWS_21:Versioning not required
-  count         = var.create_flow_logs && var.flow_logs_destination == "s3" ? 1 : 0
+  # checkov:skip=CKV_AWS_19: Default SSE is in place
+  # checkov:skip=CKV_AWS_18: Access logging not required
+  # checkov:skip=CKV_AWS_144: CRR not required
+  # checkov:skip=CKV_AWS_145: Default SSE is in place
+  # checkov:skip=CKV_AWS_52: MFA delete not required
+  # checkov:skip=CKV_AWS_21: Versioning not required
+  count         = var.create_flow_logs && var.flow_logs_destination == "s3" && var.flow_logs_bucket_arn == "" ? 1 : 0
   bucket        = "${var.network_name}-flow-logs-${random_id.id.hex}"
   acl           = "private"
   force_destroy = var.s3_force_destroy
@@ -476,7 +476,7 @@ POLICY
 }
 
 resource "aws_s3_bucket_public_access_block" "flow_logs_bucket" {
-  count                   = var.create_flow_logs && var.flow_logs_destination == "s3" ? 1 : 0
+  count                   = var.create_flow_logs && var.flow_logs_destination == "s3" && var.flow_logs_bucket_arn == "" ? 1 : 0
   bucket                  = join(",", aws_s3_bucket.flow_logs_bucket.*.id)
   block_public_acls       = true
   block_public_policy     = true

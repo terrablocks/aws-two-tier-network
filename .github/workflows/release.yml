@@ -8,11 +8,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
       - name: Set up Python 3.8
         uses: actions/setup-python@v1
         with:
           python-version: 3.8
-      - name: Test with Checkov
+      - name: Scan with Checkov
         id: checkov
         uses: bridgecrewio/checkov-action@master
         with:

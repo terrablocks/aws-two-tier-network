@@ -1,12 +1,10 @@
 name: checkov
 on:
-  workflow_run:
-    workflows:
-      - tests
-    types:
-      - completed
+  push:
+    branches:
+      - master
 jobs:
-  build:
+  scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

@@ -1,11 +1,20 @@
 # Create VPC
 resource "aws_vpc" "vpc" {
-  cidr_block           = var.cidr_block
-  enable_dns_hostnames = true
+  # checkov:skip=CKV2_AWS_12: All traffic restricted from within the security group
+  # checkov:skip=CKV2_AWS_1: Separate NACLs will be create per subnet group
+  cidr_block                       = var.cidr_block
+  enable_dns_support               = var.enable_dns_support
+  enable_dns_hostnames             = var.enable_dns_hostnames
+  instance_tenancy                 = var.instance_tenancy
+  assign_generated_ipv6_cidr_block = var.assign_ipv6_cidr_block
 
   tags = merge({
     Name = var.network_name
   }, var.tags)
+}
+
+resource "aws_default_network_acl" "this" {
+  default_network_acl_id = aws_vpc.vpc.default_network_acl_id
 }
 
 locals {
@@ -17,7 +26,7 @@ resource "aws_subnet" "pub_sub" {
   # checkov:skip=CKV_AWS_130: Public IP required in public subnet
   count                   = length(var.azs)
   vpc_id                  = aws_vpc.vpc.id
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch = var.map_public_ip_for_public_subnet
   cidr_block = cidrsubnet(
     var.cidr_block,
     var.pub_subnet_mask - local.vpc_mask,
@@ -79,6 +88,7 @@ resource "aws_route_table_association" "pub_rtb_assoc" {
 
 # Create EIP for NAT gateway
 resource "aws_eip" "nat_eip" {
+  # checkov:skip=CKV2_AWS_19: EIP associated to NAT Gateway
   count = var.create_nat ? 1 : 0
   vpc   = true
 
@@ -224,6 +234,7 @@ resource "aws_network_acl" "pvt_nacl" {
 
 # Create private security group
 resource "aws_security_group" "pvt_sg" {
+  # checkov:skip=CKV2_AWS_5: Attaching this security group to a resource depends on user
   count       = var.create_sgs ? 1 : 0
   vpc_id      = aws_vpc.vpc.id
   name        = "${var.network_name}-private-sg"
@@ -250,6 +261,7 @@ resource "aws_security_group" "pvt_sg" {
 
 # Create protected security group for all communications strictly within the VPC
 resource "aws_security_group" "protected_sg" {
+  # checkov:skip=CKV2_AWS_5: Attaching this security group to a resource depends on user
   count       = var.create_sgs ? 1 : 0
   vpc_id      = aws_vpc.vpc.id
   name        = "${var.network_name}-protected-sg"
@@ -276,6 +288,7 @@ resource "aws_security_group" "protected_sg" {
 
 # Create security group for public facing web servers or load balancer
 resource "aws_security_group" "pub_sg" {
+  # checkov:skip=CKV2_AWS_5: Attaching this security group to a resource depends on user
   count       = var.create_sgs ? 1 : 0
   vpc_id      = aws_vpc.vpc.id
   name        = "${var.network_name}-pub-web-sg"
@@ -309,6 +322,7 @@ resource "aws_security_group" "pub_sg" {
 
 # Create security group for internal web/app servers
 resource "aws_security_group" "pvt_web_sg" {
+  # checkov:skip=CKV2_AWS_5: Attaching this security group to a resource depends on user
   count       = var.create_sgs ? 1 : 0
   vpc_id      = aws_vpc.vpc.id
   name        = "${var.network_name}-pvt-web-sg"
@@ -359,6 +373,7 @@ resource "aws_cloudwatch_log_group" "cw_log_group" {
   count             = var.create_flow_logs && var.flow_logs_destination == "cloud-watch-logs" && var.flow_logs_cw_log_group_arn == "" ? 1 : 0
   name              = "${var.network_name}-flow-logs-group"
   retention_in_days = var.flow_logs_retention
+  kms_key_id        = var.cw_log_group_kms_key_arn
 
   tags = merge({
     Name = "${var.network_name}-flow-logs-group"

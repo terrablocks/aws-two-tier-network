@@ -1,12 +1,48 @@
+variable "network_name" {
+  type        = string
+  description = "Name to be used for VPC resources"
+}
+
 variable "cidr_block" {
   type        = string
   default     = "10.0.0.0/16"
   description = "CIDR block for VPC"
 }
 
-variable "network_name" {
+variable "additional_cidr_blocks" {
+  type        = list(string)
+  default     = []
+  description = "Additional CIDR block to assicate with VPC"
+}
+
+variable "enable_dns_support" {
+  type        = bool
+  default     = true
+  description = "Whether to enable/disable DNS support in the VPC"
+}
+
+variable "enable_dns_hostnames" {
+  type        = bool
+  default     = true
+  description = "Whether to enable/disable DNS hostnames in the VPC"
+}
+
+variable "instance_tenancy" {
   type        = string
-  description = "Name to be used for VPC resources"
+  default     = "default"
+  description = "Tenancy option for instances launched into the VPC. **Valid values:** default, dedicated"
+}
+
+variable "assign_ipv6_cidr_block" {
+  type        = bool
+  default     = false
+  description = "Requests an Amazon-provided IPv6 CIDR block with a /56 prefix length for the VPC"
+}
+
+variable "map_public_ip_for_public_subnet" {
+  type        = bool
+  default     = true
+  description = "Auto assign public IP to resources launched in public subnet"
 }
 
 variable "azs" {
@@ -58,6 +94,12 @@ variable "flow_logs_cw_log_group_arn" {
   type        = string
   default     = ""
   description = "ARN of CloudWatch Log Group to use for storing VPC flow logs"
+}
+
+variable "cw_log_group_kms_key_arn" {
+  type        = string
+  default     = null
+  description = "ARN of KMS key to use for Cloudwatch Log Group SSE"
 }
 
 variable "flow_logs_bucket_arn" {

@@ -29,7 +29,7 @@ output "private_subnet_ids" {
 }
 
 output "private_subnet_cidrs" {
-  value       = var.create_nat ? join(",", aws_route_table.pvt_nat_rtb.*.id) : join(",", aws_route_table.pvt_rtb.*.id)
+  value       = aws_subnet.pvt_sub.*.cidr_block
   description = "List of private subnet CIDR block"
 }
 

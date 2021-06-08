@@ -144,59 +144,21 @@ resource "aws_network_acl" "pub_nacl" {
   subnet_ids = aws_subnet.pub_sub.*.id
 
   ingress {
-    protocol   = "tcp"
+    protocol   = "-1"
     rule_no    = 100
     action     = "allow"
     cidr_block = "0.0.0.0/0"
-    from_port  = 80
-    to_port    = 80
-  }
-
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 200
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 443
-    to_port    = 443
-  }
-
-  # Ephemeral port range
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 999
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 1024
-    to_port    = 65535
+    from_port  = 0
+    to_port    = 0
   }
 
   egress {
-    protocol   = "tcp"
+    protocol   = "-1"
     rule_no    = 100
     action     = "allow"
     cidr_block = "0.0.0.0/0"
-    from_port  = 80
-    to_port    = 80
-  }
-
-  egress {
-    protocol   = "tcp"
-    rule_no    = 200
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 443
-    to_port    = 443
-  }
-
-  # Ephemeral port range
-  egress {
-    protocol   = "tcp"
-    rule_no    = 999
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 1024
-    to_port    = 65535
+    from_port  = 0
+    to_port    = 0
   }
 
   tags = merge({

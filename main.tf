@@ -194,6 +194,12 @@ resource "aws_network_acl" "pvt_nacl" {
   }, var.tags)
 }
 
+# Restrict default security group to deny all traffic
+resource "aws_default_security_group" "default" {
+  # checkov:skip=CKV2_AWS_5: Attaching this security group to a resource depends on user
+  vpc_id = aws_vpc.vpc.id
+}
+
 # Create private security group
 resource "aws_security_group" "pvt_sg" {
   # checkov:skip=CKV2_AWS_5: Attaching this security group to a resource depends on user

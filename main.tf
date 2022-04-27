@@ -181,6 +181,7 @@ resource "aws_security_group" "pvt_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = [var.cidr_block]
+    description = "Allow all traffic internally"
   }
 
   egress {
@@ -188,6 +189,7 @@ resource "aws_security_group" "pvt_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all traffic externally"
   }
 
   tags = merge({
@@ -208,6 +210,7 @@ resource "aws_security_group" "protected_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = [var.cidr_block]
+    description = "Allow all traffic internally"
   }
 
   egress {
@@ -215,6 +218,7 @@ resource "aws_security_group" "protected_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = [var.cidr_block]
+    description = "Allow all traffic externally"
   }
 
   tags = merge({
@@ -235,6 +239,7 @@ resource "aws_security_group" "pub_sg" {
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow http traffic from everywhere"
   }
 
   ingress {
@@ -242,6 +247,7 @@ resource "aws_security_group" "pub_sg" {
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow https traffic from everywhere"
   }
 
   egress {
@@ -249,6 +255,7 @@ resource "aws_security_group" "pub_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all traffic externally"
   }
 
   tags = merge({
@@ -269,6 +276,7 @@ resource "aws_security_group" "pvt_web_sg" {
     to_port         = 80
     protocol        = "tcp"
     security_groups = aws_security_group.pub_sg.*.id
+    description     = "Allow http traffic from public server security group"
   }
 
   ingress {
@@ -276,6 +284,7 @@ resource "aws_security_group" "pvt_web_sg" {
     to_port         = 443
     protocol        = "tcp"
     security_groups = aws_security_group.pub_sg.*.id
+    description     = "Allow https traffic from public server security group"
   }
 
   egress {
@@ -283,6 +292,7 @@ resource "aws_security_group" "pvt_web_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all traffic externally"
   }
 
   tags = merge({

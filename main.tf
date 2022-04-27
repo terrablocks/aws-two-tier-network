@@ -142,24 +142,8 @@ resource "aws_route_table_association" "pvt_rtb_assoc" {
 resource "aws_network_acl" "pub_nacl" {
   vpc_id     = aws_vpc.vpc.id
   subnet_ids = aws_subnet.pub_sub.*.id
-
-  ingress {
-    protocol   = "-1"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 0
-    to_port    = 0
-  }
-
-  egress {
-    protocol   = "-1"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 0
-    to_port    = 0
-  }
+  ingress    = var.pub_nacl_ingress
+  egress     = var.pub_nacl_egress
 
   tags = merge({
     Name = "${var.network_name}-pub-nacl"
@@ -170,24 +154,8 @@ resource "aws_network_acl" "pub_nacl" {
 resource "aws_network_acl" "pvt_nacl" {
   vpc_id     = aws_vpc.vpc.id
   subnet_ids = aws_subnet.pvt_sub.*.id
-
-  ingress {
-    protocol   = "-1"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 0
-    to_port    = 0
-  }
-
-  egress {
-    protocol   = "-1"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 0
-    to_port    = 0
-  }
+  ingress    = var.pvt_nacl_ingress
+  egress     = var.pvt_nacl_egress
 
   tags = merge({
     Name = "${var.network_name}-pvt-nacl"

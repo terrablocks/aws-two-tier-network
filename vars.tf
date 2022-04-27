@@ -72,6 +72,78 @@ variable "create_nat" {
   description = "Whether to create NAT gateway for private subnet"
 }
 
+variable "pub_nacl_ingress" {
+  type = list(any)
+  default = [
+    {
+      rule_no         = 100
+      protocol        = "-1"
+      cidr_block      = "0.0.0.0/0"
+      ipv6_cidr_block = null
+      icmp_type       = null
+      icmp_code       = null
+      from_port       = 0
+      to_port         = 0
+      action          = "allow"
+    }
+  ]
+  description = "List of ingress rules to attach to public subnet NACL"
+}
+
+variable "pub_nacl_egress" {
+  type = list(any)
+  default = [
+    {
+      rule_no         = 100
+      protocol        = "-1"
+      cidr_block      = "0.0.0.0/0"
+      ipv6_cidr_block = null
+      icmp_type       = null
+      icmp_code       = null
+      from_port       = 0
+      to_port         = 0
+      action          = "allow"
+    }
+  ]
+  description = "List of egress rules to attach to public subnet NACL"
+}
+
+variable "pvt_nacl_ingress" {
+  type = list(any)
+  default = [
+    {
+      rule_no         = 100
+      protocol        = "-1"
+      cidr_block      = "0.0.0.0/0"
+      ipv6_cidr_block = null
+      icmp_type       = null
+      icmp_code       = null
+      from_port       = 0
+      to_port         = 0
+      action          = "allow"
+    }
+  ]
+  description = "List of ingress rules to attach to private subnet NACL"
+}
+
+variable "pvt_nacl_egress" {
+  type = list(any)
+  default = [
+    {
+      rule_no         = 100
+      protocol        = "-1"
+      cidr_block      = "0.0.0.0/0"
+      ipv6_cidr_block = null
+      icmp_type       = null
+      icmp_code       = null
+      from_port       = 0
+      to_port         = 0
+      action          = "allow"
+    }
+  ]
+  description = "List of egress rules to attach to private subnet NACL"
+}
+
 variable "create_flow_logs" {
   type        = bool
   default     = true

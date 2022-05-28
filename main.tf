@@ -396,44 +396,59 @@ resource "aws_s3_bucket" "flow_logs_bucket" {
   # checkov:skip=CKV_AWS_21: Versioning not required
   count         = var.create_flow_logs && var.flow_logs_destination == "s3" && var.flow_logs_bucket_arn == "" ? 1 : 0
   bucket        = "${var.network_name}-flow-logs-${random_id.id.hex}"
-  acl           = "private"
   force_destroy = var.s3_force_destroy
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm     = var.s3_kms_key == "alias/aws/s3" ? "AES256" : "aws:kms"
-        kms_master_key_id = var.s3_kms_key == "alias/aws/s3" ? null : data.aws_kms_key.s3.id
-      }
-    }
-  }
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "AllowSSLRequestsOnly",
-      "Effect": "Deny",
-      "Principal": "*",
-      "Action": "s3:*",
-      "Resource": [
-        "arn:aws:s3:::${var.network_name}-flow-logs-${random_id.id.hex}",
-        "arn:aws:s3:::${var.network_name}-flow-logs-${random_id.id.hex}/*"
-      ],
-      "Condition": {
-        "Bool": {
-          "aws:SecureTransport": "false"
-        }
-      }
-    }
-  ]
-}
-POLICY
 
   tags = merge({
     Name = "${var.network_name}-flow-logs-${random_id.id.hex}"
   }, var.tags)
+}
+
+resource "aws_s3_bucket_acl" "flow_logs_bucket" {
+  count  = var.create_flow_logs && var.flow_logs_destination == "s3" && var.flow_logs_bucket_arn == "" ? 1 : 0
+  bucket = join(",", aws_s3_bucket.flow_logs_bucket.*.id)
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "flow_logs_bucket" {
+  count  = var.create_flow_logs && var.flow_logs_destination == "s3" && var.flow_logs_bucket_arn == "" ? 1 : 0
+  bucket = join(",", aws_s3_bucket.flow_logs_bucket.*.id)
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = var.s3_kms_key == "alias/aws/s3" ? "AES256" : "aws:kms"
+      kms_master_key_id = var.s3_kms_key == "alias/aws/s3" ? null : data.aws_kms_key.s3.id
+    }
+  }
+}
+
+data "aws_iam_policy_document" "flow_logs_bucket" {
+  count = var.create_flow_logs && var.flow_logs_destination == "s3" && var.flow_logs_bucket_arn == "" ? 1 : 0
+  statement {
+    sid    = "AllowSSLRequestsOnly"
+    effect = "Deny"
+    actions = [
+      "s3:*"
+    ]
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+    resources = [
+      join(",", aws_s3_bucket.flow_logs_bucket.*.id),
+      "${join(",", aws_s3_bucket.flow_logs_bucket.*.id)}/*"
+    ]
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "flow_logs_bucket" {
+  count  = var.create_flow_logs && var.flow_logs_destination == "s3" && var.flow_logs_bucket_arn == "" ? 1 : 0
+  bucket = join(",", aws_s3_bucket.flow_logs_bucket.*.id)
+  policy = join(",", data.aws_iam_policy_document.flow_logs_bucket.*.json)
 }
 
 resource "aws_s3_bucket_public_access_block" "flow_logs_bucket" {

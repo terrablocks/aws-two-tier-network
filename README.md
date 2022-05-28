@@ -1,6 +1,6 @@
 # Create a two tier AWS VPC network
 
-![License](https://img.shields.io/github/license/terrablocks/aws-two-tier-network?style=for-the-badge) ![Tests](https://img.shields.io/github/workflow/status/terrablocks/aws-two-tier-network/tests/master?label=Test&style=for-the-badge) ![Checkov](https://img.shields.io/github/workflow/status/terrablocks/aws-two-tier-network/checkov/master?label=Checkov&style=for-the-badge) ![Commit](https://img.shields.io/github/last-commit/terrablocks/aws-two-tier-network?style=for-the-badge) ![Release](https://img.shields.io/github/v/release/terrablocks/aws-two-tier-network?style=for-the-badge)
+![License](https://img.shields.io/github/license/terrablocks/aws-two-tier-network?style=for-the-badge) ![Tests](https://img.shields.io/github/workflow/status/terrablocks/aws-two-tier-network/tests/main?label=Test&style=for-the-badge) ![Checkov](https://img.shields.io/github/workflow/status/terrablocks/aws-two-tier-network/checkov/main?label=Checkov&style=for-the-badge) ![Commit](https://img.shields.io/github/last-commit/terrablocks/aws-two-tier-network?style=for-the-badge) ![Release](https://img.shields.io/github/v/release/terrablocks/aws-two-tier-network?style=for-the-badge)
 
 ## **Note:** Please use [aws-vpc](https://github.com/terrablocks/aws-vpc) and [aws-subnets](https://github.com/terrablocks/aws-subnets) modules instead of this for better management of your network stack
 
@@ -11,13 +11,12 @@ This terraform module will deploy the following services:
   - NAT Gateway
   - Route Tables
   - NACLs
-  - Security Groups
-  - Flow Logs
+  - Security Groups (Optional)
+  - Flow Logs (Optional)
 - Route53
-  - Private Hosted Zone
-- CloudWatch
-  - Log Group
-- S3
+  - Private Hosted Zone (Optional)
+- CloudWatch Log Group (Optional)
+- S3 Bucket (Optional)
 
 # Usage Instructions
 ## Example
@@ -36,8 +35,8 @@ module "network" {
 
 | Name | Version |
 |------|---------|
-| terraform | >= 0.13 |
-| aws | >= 3.37.0 |
+| terraform | >= 0.15 |
+| aws | >= 4.0.0 |
 | random | >= 3.1.0 |
 
 ## Inputs

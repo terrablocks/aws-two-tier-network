@@ -70,14 +70,15 @@ resource "aws_internet_gateway" "igw" {
 resource "aws_route_table" "pub_rtb" {
   vpc_id = aws_vpc.vpc.id
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.igw.id
-  }
-
   tags = merge({
     Name = "${var.network_name}-pub-rtb"
   }, var.tags)
+}
+
+resource "aws_route" "pub_rtb" {
+  route_table_id         = aws_route_table.pub_rtb.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.igw.id
 }
 
 resource "aws_route_table_association" "pub_rtb_assoc" {
@@ -122,14 +123,16 @@ resource "aws_route_table" "pvt_nat_rtb" {
   count  = var.create_nat ? 1 : 0
   vpc_id = aws_vpc.vpc.id
 
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = join(", ", aws_nat_gateway.nat_gw.*.id)
-  }
-
   tags = merge({
     Name = "${var.network_name}-pvt-nat-rtb"
   }, var.tags)
+}
+
+resource "aws_route" "pvt_nat_rtb" {
+  count                  = var.create_nat ? 1 : 0
+  route_table_id         = join(",", aws_route_table.pvt_nat_rtb.*.id)
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = join(", ", aws_nat_gateway.nat_gw.*.id)
 }
 
 resource "aws_route_table_association" "pvt_rtb_assoc" {

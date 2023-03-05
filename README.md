@@ -50,11 +50,12 @@ module "network" {
 | enable_dns_hostnames | Whether to enable/disable DNS hostnames in the VPC | `bool` | `true` | no |
 | instance_tenancy | Tenancy option for instances launched into the VPC. **Valid values:** default, dedicated | `string` | `"default"` | no |
 | assign_ipv6_cidr_block | Requests an Amazon-provided IPv6 CIDR block with a /56 prefix length for the VPC | `bool` | `false` | no |
-| map_public_ip_for_public_subnet | Auto assign public IP to resources launched in public subnet | `bool` | `true` | no |
 | azs | List of availability zones to be used for launching resources | `list(string)` | <pre>[<br>  "us-east-1a",<br>  "us-east-1b"<br>]</pre> | no |
+| map_public_ip_for_public_subnet | Auto assign public IP to resources launched in public subnet | `bool` | `true` | no |
 | pub_subnet_mask | Subnet mask to use for public subnet | `number` | `24` | no |
 | pvt_subnet_mask | Subnet mask to use for private subnet | `number` | `24` | no |
 | create_nat | Whether to create NAT gateway for private subnet | `bool` | `true` | no |
+| nat_eip_id | Allocation ID of EIP to attach to NAT gateway in private subnet. Leave it blank to create a new EIP | `string` | `""` | no |
 | pub_nacl_ingress | List of ingress rules to attach to public subnet NACL | `list(any)` | <pre>[<br>  {<br>    "action": "allow",<br>    "cidr_block": "0.0.0.0/0",<br>    "from_port": 0,<br>    "icmp_code": null,<br>    "icmp_type": null,<br>    "ipv6_cidr_block": null,<br>    "protocol": "-1",<br>    "rule_no": 100,<br>    "to_port": 0<br>  }<br>]</pre> | no |
 | pub_nacl_egress | List of egress rules to attach to public subnet NACL | `list(any)` | <pre>[<br>  {<br>    "action": "allow",<br>    "cidr_block": "0.0.0.0/0",<br>    "from_port": 0,<br>    "icmp_code": null,<br>    "icmp_type": null,<br>    "ipv6_cidr_block": null,<br>    "protocol": "-1",<br>    "rule_no": 100,<br>    "to_port": 0<br>  }<br>]</pre> | no |
 | pvt_nacl_ingress | List of ingress rules to attach to private subnet NACL | `list(any)` | <pre>[<br>  {<br>    "action": "allow",<br>    "cidr_block": "0.0.0.0/0",<br>    "from_port": 0,<br>    "icmp_code": null,<br>    "icmp_type": null,<br>    "ipv6_cidr_block": null,<br>    "protocol": "-1",<br>    "rule_no": 100,<br>    "to_port": 0<br>  }<br>]</pre> | no |

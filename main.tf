@@ -90,7 +90,7 @@ resource "aws_route_table_association" "pub_rtb_assoc" {
 # Create EIP for NAT gateway
 resource "aws_eip" "nat_eip" {
   # checkov:skip=CKV2_AWS_19: EIP associated to NAT Gateway
-  count = var.create_nat ? 1 : 0
+  count = var.create_nat && var.nat_eip_id == "" ? 1 : 0
   vpc   = true
 
   tags = merge({
@@ -102,7 +102,7 @@ resource "aws_eip" "nat_eip" {
 resource "aws_nat_gateway" "nat_gw" {
   count         = var.create_nat ? 1 : 0
   subnet_id     = aws_subnet.pub_sub[0].id
-  allocation_id = join(", ", aws_eip.nat_eip.*.id)
+  allocation_id = var.nat_eip_id == "" ? join(", ", aws_eip.nat_eip.*.id) : var.nat_eip_id
 
   tags = merge({
     Name = "${var.network_name}-nat-gw"
@@ -232,6 +232,7 @@ resource "aws_security_group" "protected_sg" {
 # Create security group for public facing web servers or load balancer
 resource "aws_security_group" "pub_sg" {
   # checkov:skip=CKV2_AWS_5: Attaching this security group to a resource depends on user
+  # checkov:skip=CKV_AWS_260: 80 ingress required
   count       = var.create_sgs ? 1 : 0
   vpc_id      = aws_vpc.vpc.id
   name        = "${var.network_name}-pub-web-sg"
@@ -465,6 +466,8 @@ resource "aws_s3_bucket_public_access_block" "flow_logs_bucket" {
 
 # Create private hosted zone
 resource "aws_route53_zone" "private" {
+  # checkov:skip=CKV2_AWS_39: Query logging
+  # checkov:skip=CKV2_AWS_38: DNSSEC logging
   count = var.create_private_zone == true ? 1 : 0
   name  = var.private_zone_domain
 
